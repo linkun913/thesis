@@ -31,14 +31,22 @@ public class TestGalleryActivity extends Activity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.test);
-		// str123(Data.SurveyQue);
-		privacy = getIntent().getIntExtra("privacy", 0);
+		// need to clear
+		//privacy = getIntent().getIntExtra("privacy", 0);
+		//Data.privacyLevel = privacy;
 		Data.privacy = Integer.toString(privacy + 1);
 		findViews();
 		setUp();
 
+	}
+
+	private void findViews() {
+		tv_test = (TextView) findViewById(R.id.text_view_test);
+		bSubmit = (Button) findViewById(R.id.submit1);
+		gallery = (Gallery) findViewById(R.id.myGallery);
 	}
 
 	private void setUp() {
@@ -48,11 +56,7 @@ public class TestGalleryActivity extends Activity {
 		rb.setRating(0);
 		rb.setStepSize((float) 1.0);
 		rb.setOnRatingBarChangeListener(rbLis);
-		Data.RatingList = new String[Data.dataList.size()];
-		Data.RatingListDou = new Float[Data.dataList.size()];
-		for (int i = 0; i < Data.dataList.size(); i++) {
-			Data.RatingListDou[i] = (float) 5.0;
-		}
+
 		gallery.setAdapter(new galleryAdapter(this));
 		gallery.setOnItemClickListener(new OnItemClickListener() {
 
@@ -62,7 +66,7 @@ public class TestGalleryActivity extends Activity {
 				Toast.makeText(TestGalleryActivity.this, "" + id + "onclick",
 						Toast.LENGTH_SHORT).show();
 				chosenId = position;
-				rb.setRating(Data.RatingListDou[chosenId]);
+				rb.setRating(Data.dataList.get(chosenId).getRawRate());
 				tv_test.setText("chosen" + chosenId);
 			}
 		});
@@ -71,73 +75,30 @@ public class TestGalleryActivity extends Activity {
 		gallery.setUnselectedAlpha(150.0f);
 	}
 
-	private void findViews() {
-		tv_test = (TextView) findViewById(R.id.text_view_test);
-		bSubmit = (Button) findViewById(R.id.submit1);
-		gallery = (Gallery) findViewById(R.id.myGallery);
-	}
-
-	public void str123(String[] str) {
-		for (int i = 0; i < 5; i++) {
-
-			StringBuffer sb = new StringBuffer();
-			for (int j = 0; j < 50; j++) {
-
-				sb.append("Survey" + String.valueOf(i));
-			}
-			str[i] = sb.toString();
-		}
-	}
-
 	private OnClickListener submitButtonProcess = new OnClickListener() {
+		
 		public void onClick(View v) {
-
-			// then tcp connection to server
-			NetWork nw = new NetWork();
-			nw.disable_policy();
-
-			Data.lines = nw.http10TcpSendAndRec(nw.http_request(Data.host,
-					"/survey/8/" + Data.login_username + "/"
-							+ Data.login_password + "/" + Data.privacy
-							+ "/session/"));
-			for (int i = 0; i < Data.dataList.size(); i++) {
-				Data.RatingList[i] = Double.toString(Data.RatingListDou[i]
-						+ nw.gaussianrvGen(privacy));
-				Data.lines1 = nw.http10TcpSendAndRec(nw.http_request(Data.host,
-						"/survey/" + Integer.toString(Data.dataList.get(i).getID()) + "/"
-								+ Data.RatingList[i] + "/"
-								+ Data.login_username + "/"
-								+ Data.login_password + "/response/"));
-			}
-			Data.lines1[1] = nw.http_request(Data.host, "/survey/8/"
-					+ Data.login_username + "/" + Data.login_password + "/"
-					+ Data.privacy + "/session/");
-			// Intent intent = new Intent();
-			// intent.setClass(TestGalleryActivity.this, MainActivity.class);
-			// startActivity(intent);
+			Commands cmd = new Commands();
+			cmd.createSessionAndSetPrivacyLevel();
+			cmd.sendSurveyResponse();
 			finish();
-
 		}
+		
 	};
-
-	public String f2Int2Str(float f) {
-		return Integer.toString((int) f);
-	}
 
 	private OnRatingBarChangeListener rbLis = new OnRatingBarChangeListener() {
 
 		public void onRatingChanged(RatingBar ratingBar, float rating,
 				boolean fromUser) {
-			NetWork nw = new NetWork();
-			String rate;
-			// ratingList[chosenId]=f2Int2Str(rating);
-			Data.RatingListDou[chosenId] = rating;
-			Data.RatingList[chosenId] = Double.toString(rating
-					+ nw.gaussianrvGen(privacy));
-
-			tv_test.setText("original rating:" + rating + ",chosenId:"
-					+ chosenId + "\n,private rating:"
-					+ Data.RatingList[chosenId]);
+			Data.dataList.get(chosenId).setRawRate(rating);
+			tv_test.setText(
+					"original rating:"
+					+ Data.dataList.get(chosenId).getRawRate() + 
+					",chosenId:"
+					+ chosenId + 
+					"\n,private rating:"
+					+ Data.dataList.get(chosenId).getPrivateRate()
+					);
 		}
 
 	};
@@ -152,7 +113,7 @@ public class TestGalleryActivity extends Activity {
 
 		public int getCount() {
 			// TODO Auto-generated method stub
-			return Data.dataList.size();
+			return Data.SurveyLen;
 		}
 
 		public Object getItem(int position) {

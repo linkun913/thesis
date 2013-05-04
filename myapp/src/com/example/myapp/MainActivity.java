@@ -25,17 +25,11 @@ public class MainActivity extends Activity {
 	private Button loginButton;
 	private Button registerButton;
 
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		/*
-		 * if (android.os.Build.VERSION.SDK_INT > 9) { StrictMode.ThreadPolicy
-		 * policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-		 * StrictMode.setThreadPolicy(policy); }
-		 */
 		findViews();
 		setListener();
 	}
@@ -55,31 +49,17 @@ public class MainActivity extends Activity {
 
 	private OnClickListener login_process = new OnClickListener() {
 		public void onClick(View v) {
-			String [] receivedLines;
-
+			Commands cmd = new Commands();
+			Gson gson = new Gson();
+			Type type = new TypeToken<List<SurveyData>>() {
+			}.getType();
 			Data.login_username = loginUsername.getText().toString();
 			Data.login_password = loginPassword.getText().toString();
 			// then tcp connection to server
-			NetWork nw = new NetWork();
-			nw.disable_policy();
-			receivedLines=nw.http10TcpSendAndRec(nw.http_request(Data.host, "/survey/8/"));
-			
-			//Data.jsonData=receivedLines[7];
-			//Data.jsonData=Data.jsonData.replaceAll("\"","'");
-			//nw.getJsonData();
-			Gson gson= new Gson();
-			Type type = new TypeToken<List<ReadJson>>(){}.getType();  
-			Data.dataList=gson.fromJson(receivedLines[7], type);
-
-
-			//********
-
-			//ReadJson rj=new ReadJson();
-			//rj=list.get(0);
-
-			
-			//nw.http10TcpSendOnly("username:" + Data.login_username + ",password:"+ Data.login_password);
+			Data.surveyList = gson.fromJson(cmd.getSurveys(), type);
+			//Data.SurveyLen = Data.surveyList.size();
 			privacy_dialogue();
+			
 
 		}
 	};
@@ -94,7 +74,7 @@ public class MainActivity extends Activity {
 
 	public void privacy_dialogue() {
 		final CharSequence[] items = { "None", "Low", "Medium", "High" };
-
+		AlertDialog alertList;
 		AlertDialog.Builder listBuilder = new AlertDialog.Builder(
 				MainActivity.this);
 		listBuilder.setTitle("Select A Privacy Level");
@@ -102,14 +82,17 @@ public class MainActivity extends Activity {
 			public void onClick(DialogInterface dialog, int item) {
 				Toast.makeText(getApplicationContext(), items[item],
 						Toast.LENGTH_SHORT).show();
+				Data.privacyLevel=item;
 				Intent intent = new Intent(MainActivity.this,
-						TestGalleryActivity.class);
-				intent.putExtra("privacy", item);
+						chooseSurvey.class);
+				//intent.putExtra("privacy", item);
 				startActivity(intent);
+
 			}
 		});
-		AlertDialog alertList = listBuilder.create();
+		alertList = listBuilder.create();
 		alertList.show();
+		
 
 	}
 

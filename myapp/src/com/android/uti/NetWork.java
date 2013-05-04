@@ -26,9 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-
-
-
 public class NetWork {
 	DatagramSocket clientSocket=null;
 	Socket s = null;
@@ -103,7 +100,7 @@ public class NetWork {
 	public void UDPsend(byte[] sendData)  {
 		InetAddress IPAddress=null;
 		try {
-			IPAddress = InetAddress.getByAddress(Data.hostBytes);
+			IPAddress = InetAddress.getByName(Data.host);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
